@@ -1,6 +1,13 @@
 import sqlite3
 
+class NoFieldsSelectedError(Exception):
+    pass
+
 def search(year, method, host, facility):
+    # Check if any search parameters are provided
+    if not any([year, method, host, facility]):
+        raise NoFieldsSelectedError("No search fields selected")
+
     query = "SELECT DISTINCT pl_name, disc_year, discoverymethod, hostname, disc_facility FROM exoplanets WHERE 1=1"
     params = []
         
