@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
         self.output_table.setColumnCount(5)  # Adjust column count as needed
         self.output_table.setHorizontalHeaderLabels(["Planet Name", "Year of Discovery", "Discovery Method", "Host Name", "Discovery Facility"])  # Adjust headers
         self.central_widget.layout().addWidget(self.output_table)
+        self.output_table.setSortingEnabled(True)
         
     def populate_search_boxes(self):
         try:

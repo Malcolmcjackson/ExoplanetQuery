@@ -3,11 +3,6 @@ import sqlite3
 import csv
 from io import StringIO
 
-import requests
-import sqlite3
-import csv
-from io import StringIO
-
 # Function to create SQLite database and table
 def create_database():
     conn = sqlite3.connect('exoplanets.db')
