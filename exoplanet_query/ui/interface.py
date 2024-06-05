@@ -6,12 +6,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 import sqlite3
 import query.processor as query
-from matplotlib.backends.backend_qt5agg import (
-    FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
-)
 import numpy as np
 from scipy import stats
-import matplotlib.pyplot as plt
+import pyqtgraph as pg
 
 class SecondaryWindow(QMainWindow):
     def __init__(self):
@@ -25,56 +22,146 @@ class SecondaryWindow(QMainWindow):
         layout = QVBoxLayout()
         self.central_widget.setLayout(layout)
         
-        self.figure = plt.figure(figsize=(8, 6))
-        self.canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.canvas)
-
-        # Add navigation toolbar
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        layout.addWidget(self.toolbar)
+        self.plot_widget = pg.PlotWidget()
+        layout.addWidget(self.plot_widget)
         
-        self.generate_plot()
+        self.setup_ui()
+
+    def setup_ui(self):
+        # Layout for dropdowns
+        axis_layout = QHBoxLayout()
+        
+        # Dropdown for X-axis
+        self.x_axis_label = QLabel("X-Axis:")
+        self.x_axis_combo = QComboBox()
+        axis_layout.addWidget(self.x_axis_label)
+        axis_layout.addWidget(self.x_axis_combo)
+        
+        # Dropdown for Y-axis
+        self.y_axis_label = QLabel("Y-Axis:")
+        self.y_axis_combo = QComboBox()
+        axis_layout.addWidget(self.y_axis_label)
+        axis_layout.addWidget(self.y_axis_combo)
+        
+        # Add layout for dropdowns
+        self.central_widget.layout().addLayout(axis_layout)
+        
+        # Button to generate plot
+        generate_plot_button = QPushButton("Generate Plot")
+        generate_plot_button.clicked.connect(self.generate_plot)
+        self.central_widget.layout().addWidget(generate_plot_button)
+
+        # Populate dropdowns
+        self.populate_dropdowns()
+
+    def populate_dropdowns(self):
+        # Define a mapping of column names to user-friendly labels
+        column_labels = {
+            "pl_name": "Planet Name",
+            "disc_year": "Discovery Year",
+            "discoverymethod": "Discovery Method",
+            "hostname": "Host Name",
+            "disc_facility": "Discovery Facility",
+            "sy_dist": "Distance from Earth",
+            "pl_rade": "Radius (in R🜨)",
+            "pl_masse": "Mass (in M🜨)",
+            "pl_orbper": "Orbital Period (in days)",
+            "st_rad": "Star Radius (in R☉)" ,
+            "pl_eqt": "Temperature (in K)"
+        }
+
+        # Create a reverse mapping dictionary to map user-friendly labels back to column names
+        self.column_names = {v: k for k, v in column_labels.items()}
+
+        try:
+            conn = sqlite3.connect('exoplanets.db')
+            c = conn.cursor()
+            
+            # Get the list of columns from the exoplanets table
+            c.execute("PRAGMA table_info(exoplanets)")
+            columns = [column[1] for column in c.fetchall()]
+            
+            # Map column names to user-friendly labels
+            user_friendly_columns = [column_labels.get(column, column) for column in columns]
+            
+            # Add user-friendly labels to dropdowns
+            self.x_axis_combo.addItems(user_friendly_columns)
+            self.y_axis_combo.addItems(user_friendly_columns)
+            
+            conn.close()
+        except sqlite3.Error as e:
+            QMessageBox.warning(self, "Error", f"SQLite error: {e}")
 
     def generate_plot(self):
         try:
             conn = sqlite3.connect('exoplanets.db')
             c = conn.cursor()
             
-            # Retrieve data from the database
-            # Some don't have all data fields, exclude those that are empty
-            c.execute('SELECT pl_rade, pl_masse FROM exoplanets WHERE pl_rade != "" AND pl_masse != ""')                  
+            # Retrieve data from the database based on selected columns
+            x_column_label = self.x_axis_combo.currentText()
+            y_column_label = self.y_axis_combo.currentText()
+            
+            # Retrieve the actual column names using the column_names dictionary
+            x_column = self.column_names.get(x_column_label, x_column_label)
+            y_column = self.column_names.get(y_column_label, y_column_label)
+            
+            c.execute(f'SELECT {x_column}, {y_column} FROM exoplanets WHERE {x_column} != "" AND {y_column} != ""')
             data = c.fetchall()
             
             # Close the database connection
             conn.close()
             
-            # Extract radius and mass data
-            radii = [row[0] for row in data]
-            masses = [row[1] for row in data]
+            # Extract x and y data
+            x_data = np.array([row[0] for row in data])
+            y_data = np.array([row[1] for row in data])
             
             # Clear the previous plot
-            self.figure.clear()
+            self.plot_widget.clear()
             
-            # Create the scatter plot on the current figure
-            ax = self.figure.add_subplot(111)
-            ax.scatter(radii, masses, alpha=0.5)
-            ax.set_title("Exoplanet Radius vs Mass")
-            ax.set_xlabel("Radius (Earth radii)")
-            ax.set_ylabel("Mass (Earth masses)")
-            ax.grid(True)
+            # Bin and aggregate data
+            bin_centers, bin_values = self.bin_and_aggregate_data(x_data, y_data)
+            
+            # Create the scatter plot
+            self.plot_widget.plot(bin_centers, bin_values, symbol='o', symbolSize=5, pen=None)
+            #self.plot_widget.setTitle("Exoplanet Data Visualization")
+            self.plot_widget.setLabel('left', text=y_column_label)
+            self.plot_widget.setLabel('bottom', text=x_column_label)
+            self.plot_widget.showGrid(False, False)
+
+            # Set minimum values for axes to zero
+            #self.plot_widget.setXRange(0, np.max(x_data))
+            #self.plot_widget.setYRange(0, np.max(y_data))
 
             # Add trend line (linear regression)
-            slope, intercept, r_value, p_value, std_err = stats.linregress(radii, masses)
-            trend_line = f"y = {slope:.2f}x + {intercept:.2f}\nR-squared = {r_value**2:.2f}"
-            ax.plot(np.array(radii), slope*np.array(radii) + intercept, color='red', label=trend_line)
-            ax.legend()
-
-            # Redraw canvas with updated plot
-            self.canvas.draw() 
-            
+            slope, intercept, r_value, p_value, std_err = stats.linregress(x_data, y_data)
+            trend_line_x = np.array([np.min(x_data), np.max(x_data)])
+            trend_line_y = slope * trend_line_x + intercept
+            self.plot_widget.plot(trend_line_x, trend_line_y, pen=pg.mkPen('r'), name="Trend Line")
             
         except sqlite3.Error as e:
             QMessageBox.warning(self, "Error", "Failed to retrieve data from the database.")
+
+    def bin_and_aggregate_data(self, x_data, y_data, num_bins=200):
+        # Calculate bin edges
+        bin_edges = np.linspace(np.min(x_data) - 1e-6, np.max(x_data) + 1e-6, num_bins + 1)
+        bin_centers = (bin_edges[1:] + bin_edges[:-1]) / 2
+        
+        # Initialize arrays to store aggregated values
+        bin_values = np.zeros_like(bin_centers)
+        bin_counts = np.zeros_like(bin_centers)
+        
+        # Iterate over data points and assign them to bins
+        for x, y in zip(x_data, y_data):
+            bin_index = np.digitize(x, bin_edges) - 1
+            bin_values[bin_index] += y
+            bin_counts[bin_index] += 1
+        
+        # Calculate mean value for each bin
+        bin_values = np.divide(bin_values, np.maximum(bin_counts, 1), out=np.zeros_like(bin_values), where=bin_counts!=0)
+        
+        return bin_centers, bin_values
+
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -100,11 +187,16 @@ class MainWindow(QMainWindow):
         self.secondary_window.show()
         
     def setup_ui(self):
-        label = QLabel("Welcome to NASA Exoplanet Query")
-        self.central_widget.layout().addWidget(label)
-        
         # Search boxes with combo boxes and labels
         search_layout = QVBoxLayout()
+
+        name_layout = QHBoxLayout()
+        name_label = QLabel("Planet Name:")
+        self.name_search = QComboBox()
+        self.name_search.setEditable(True)
+        self.name_search.setPlaceholderText("Select or type name")
+        name_layout.addWidget(name_label)
+        name_layout.addWidget(self.name_search)
         
         year_layout = QHBoxLayout()
         year_label = QLabel("Year of Discovery:")
@@ -138,6 +230,7 @@ class MainWindow(QMainWindow):
         facility_layout.addWidget(facility_label)
         facility_layout.addWidget(self.facility_search)
         
+        search_layout.addLayout(name_layout)
         search_layout.addLayout(year_layout)
         search_layout.addLayout(method_layout)
         search_layout.addLayout(host_layout)
@@ -159,18 +252,27 @@ class MainWindow(QMainWindow):
         
         # Output
         self.output_table = QTableWidget()
-        self.output_table.setColumnCount(5)  # Adjust column count as needed
-        self.output_table.setHorizontalHeaderLabels(["Planet Name", "Year of Discovery", "Discovery Method", "Host Name", "Discovery Facility"])  # Adjust headers
+        self.output_table.setColumnCount(5)
+        self.output_table.setHorizontalHeaderLabels(["Planet Name", "Year of Discovery", "Discovery Method", "Host Name", "Discovery Facility"])
         self.central_widget.layout().addWidget(self.output_table)
         self.output_table.setSortingEnabled(True)
+
+        # Auto-size columns to fit the content initially
+        self.output_table.resizeColumnsToContents()
+
         
     def populate_search_boxes(self):
         try:
             conn = sqlite3.connect('exoplanets.db')
             c = conn.cursor()
             
+            # Populate name search box
+            c.execute('SELECT DISTINCT pl_name FROM exoplanets ORDER BY pl_name ASC')
+            names = [names[0] for names in c.fetchall()]
+            self.populate_combo_box(self.name_search, names)
+
             # Populate year search box
-            c.execute('SELECT DISTINCT disc_year FROM exoplanets ORDER BY disc_year ASC')  # Adjust query to get distinct years
+            c.execute('SELECT DISTINCT disc_year FROM exoplanets ORDER BY disc_year ASC')
             years = [str(year[0]) for year in c.fetchall()]
             self.populate_combo_box(self.year_search, years)
             
@@ -200,13 +302,14 @@ class MainWindow(QMainWindow):
         combobox.setCompleter(completer)
 
     def search(self):
+        name = self.name_search.currentText()
         year = self.year_search.currentText()
         method = self.method_search.currentText()
         host = self.host_search.currentText()
         facility = self.facility_search.currentText()
         
         try:
-            results = query.search(year, method, host, facility)
+            results = query.search(name, year, method, host, facility)
         except query.NoFieldsSelectedError:
             QMessageBox.warning(self, "Error", "Please select at least one search field.")
             return
@@ -225,4 +328,3 @@ class MainWindow(QMainWindow):
         
     def clear(self):
         self.output_table.clearContents()
-        
