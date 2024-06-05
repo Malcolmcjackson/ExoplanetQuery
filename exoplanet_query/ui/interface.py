@@ -1,9 +1,80 @@
-import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHBoxLayout, QComboBox, QCompleter
+from PyQt6.QtWidgets import (
+    QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
+    QTableWidget, QTableWidgetItem, QHBoxLayout, QComboBox,
+    QCompleter, QMessageBox
+)
 from PyQt6.QtCore import Qt
 import sqlite3
 import query.processor as query
-from PyQt6.QtWidgets import QMessageBox
+from matplotlib.backends.backend_qt5agg import (
+    FigureCanvasQTAgg as FigureCanvas, NavigationToolbar2QT as NavigationToolbar
+)
+import numpy as np
+from scipy import stats
+import matplotlib.pyplot as plt
+
+class SecondaryWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Exoplanet Data Visualization")
+        self.setGeometry(100, 100, 800, 600)
+        
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        
+        layout = QVBoxLayout()
+        self.central_widget.setLayout(layout)
+        
+        self.figure = plt.figure(figsize=(8, 6))
+        self.canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.canvas)
+
+        # Add navigation toolbar
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        layout.addWidget(self.toolbar)
+        
+        self.generate_plot()
+
+    def generate_plot(self):
+        try:
+            conn = sqlite3.connect('exoplanets.db')
+            c = conn.cursor()
+            
+            # Retrieve data from the database
+            # Some don't have all data fields, exclude those that are empty
+            c.execute('SELECT pl_rade, pl_masse FROM exoplanets WHERE pl_rade != "" AND pl_masse != ""')                  
+            data = c.fetchall()
+            
+            # Close the database connection
+            conn.close()
+            
+            # Extract radius and mass data
+            radii = [row[0] for row in data]
+            masses = [row[1] for row in data]
+            
+            # Clear the previous plot
+            self.figure.clear()
+            
+            # Create the scatter plot on the current figure
+            ax = self.figure.add_subplot(111)
+            ax.scatter(radii, masses, alpha=0.5)
+            ax.set_title("Exoplanet Radius vs Mass")
+            ax.set_xlabel("Radius (Earth radii)")
+            ax.set_ylabel("Mass (Earth masses)")
+            ax.grid(True)
+
+            # Add trend line (linear regression)
+            slope, intercept, r_value, p_value, std_err = stats.linregress(radii, masses)
+            trend_line = f"y = {slope:.2f}x + {intercept:.2f}\nR-squared = {r_value**2:.2f}"
+            ax.plot(np.array(radii), slope*np.array(radii) + intercept, color='red', label=trend_line)
+            ax.legend()
+
+            # Redraw canvas with updated plot
+            self.canvas.draw() 
+            
+            
+        except sqlite3.Error as e:
+            QMessageBox.warning(self, "Error", "Failed to retrieve data from the database.")
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -19,6 +90,14 @@ class MainWindow(QMainWindow):
         
         self.setup_ui()
         self.populate_search_boxes()
+
+        open_button = QPushButton("Open Plot")
+        open_button.clicked.connect(self.open_secondary_window)
+        layout.addWidget(open_button)
+
+    def open_secondary_window(self):
+        self.secondary_window = SecondaryWindow()
+        self.secondary_window.show()
         
     def setup_ui(self):
         label = QLabel("Welcome to NASA Exoplanet Query")
