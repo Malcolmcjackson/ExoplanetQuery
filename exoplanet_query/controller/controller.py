@@ -1,14 +1,14 @@
 from view.view import MainWindow, SecondaryWindow
 from model.model import ExoplanetModel
 from PyQt6.QtWidgets import QTableWidgetItem, QMessageBox
-import sqlite3
-from scipy import stats
-import numpy as np
-import pyqtgraph as pg
 import plot_logic.plot as plot
+import database.data_loader as db_loader
 
 class Controller:
     def __init__(self):
+        db_loader.create_database()
+        db_loader.load_exoplanet_data()
+
         self.model = ExoplanetModel()
         self.main_window = MainWindow()
         self.secondary_window = SecondaryWindow()

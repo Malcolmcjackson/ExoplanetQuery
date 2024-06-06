@@ -4,7 +4,6 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt6.QtWidgets import QMessageBox
 
-
 def bin_and_aggregate_data(x_data, y_data, num_bins=200):
     # Calculate bin edges
     bin_edges = np.linspace(np.min(x_data) - 1e-6, np.max(x_data) + 1e-6, num_bins + 1)

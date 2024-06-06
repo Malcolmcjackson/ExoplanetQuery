@@ -2,7 +2,6 @@ from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton,
     QTableWidget, QHBoxLayout, QComboBox, QCompleter, QMessageBox, QHeaderView )
 import sqlite3
-
 from PyQt6.QtCore import Qt
 import pyqtgraph as pg
 
