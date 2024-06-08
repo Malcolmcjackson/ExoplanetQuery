@@ -3,7 +3,7 @@
 
 ## Features
 - Query exoplanet data by name, discovery year, method, host name, and facility.
-- Display results in a searchable and sortable table.
+- Display results in a sortable table.
 - Generate customizable plots for data visualization.
 
 ## Screenshots
