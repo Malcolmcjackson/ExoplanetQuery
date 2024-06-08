@@ -1,5 +1,5 @@
 <h3 align="center">NASA-Exoplanet-Query-App</h3>
-  <p align="center"> An application that allows users to query NASA's exoplanet archive written in Python</p>
+  <p align="center"> An application that allows users to query and visualize NASA's exoplanet archive, written in Python</p>
 
 ## Features
 - Query exoplanet data by name, discovery year, method, host name, and facility.
