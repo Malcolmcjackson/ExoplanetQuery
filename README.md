@@ -20,7 +20,7 @@ Query Window            |  Plot Window
 ## Setup
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/exoplanet-query.git
+   git clone https://github.com/Malcolmcjackson/NASA-Exoplanet-Query-App.git
    ```
 
 2. Navigate to the project directory:
