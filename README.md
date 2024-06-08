@@ -58,9 +58,13 @@ Query Window            |  Plot Window
         ```sh 
         source venv/bin/activate
         ```
-3. Use the main window to query exoplanet data.
+2. Run "main.py":
+    ```
+    python exoplanet_query/main.py
+    ```
+    - Use the main window to query exoplanet data.
 
-4. Open the secondary window to visualize data with plots.
+    - Open the secondary window to visualize data with plots.
 
 ## Potential Improvements
 Potential features to be implemented in the future:
