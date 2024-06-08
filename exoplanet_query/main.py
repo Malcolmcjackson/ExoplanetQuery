@@ -24,7 +24,6 @@ class DataLoaderThread(QThread):
         create_database()
         load_exoplanet_data()
         self.data_loaded.emit()
-        print("Data loaded")
 
 def show_main_window(controller):
     """
@@ -36,7 +35,6 @@ def show_main_window(controller):
     main_window = controller.main_window
     main_window.show()
     main_window.activateWindow()
-    print("Showing main window")
 
 if __name__ == "__main__":
     """
