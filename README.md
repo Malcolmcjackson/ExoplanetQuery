@@ -69,11 +69,6 @@ Query Window            |  Plot Window
 
 ---
 ## Release Version
-### For Windows
-1. Download the executable from the [GitHub Releases Page](https://github.com/Malcolmcjackson/NASA-Exoplanet-Query-App/releases).
-2. Extract '**exoplanet-query.zip**' using WinRAR or 7-Zip.
-3. Run the '**exoplanet_query.exe**' executable.
-
 ### For Linux and macOS
 1. Download the executable from the [GitHub Releases Page](https://github.com/Malcolmcjackson/NASA-Exoplanet-Query-App/releases).
 2. Extract the downloaded file:
@@ -88,6 +83,8 @@ Query Window            |  Plot Window
     ```sh
     ./exoplanet_query
     ```
+### For Windows
+- Coming soon
 ---
 ## Potential Improvements
 Potential features to be implemented in the future:
@@ -98,3 +95,4 @@ Potential features to be implemented in the future:
 - Implement hyperlinking to the NASA Exoplanet website when a planet name is clicked for more detailed information.
 - Switch frameworks from PyQt6 to something more lightweight.
 - Deploy a web demo using Flask/Django and AWS.
+- Release Windows build (exe, or an installer)
