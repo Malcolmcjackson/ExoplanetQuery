@@ -12,12 +12,12 @@ Query Window            |  Plot Window
 :-------------------------:|:-------------------------:
   ![Main Window](screenshots/main_window.png)  |    ![Secondary Window](screenshots/secondary_window.png)
 
-
-## Prerequisites
+---
+## Manual Setup
+### Prerequisites
 - Python 3.6+
 - Additional dependencies listed in `requirements.txt`
 
-## Setup
 1. Clone the repository:
    ```sh
    git clone https://github.com/Malcolmcjackson/NASA-Exoplanet-Query-App.git
@@ -25,7 +25,7 @@ Query Window            |  Plot Window
 
 2. Navigate to the project directory:
     ```sh
-    cd exoplanet-query
+    cd NASA-Exoplanet-Query-App/exoplanet_query/
     ```
 
 3. Create a virtual environment:
@@ -47,8 +47,7 @@ Query Window            |  Plot Window
     pip install -r requirements.txt
     ```
 
-## Usage
-
+### Usage
 1. Ensure the virtual environment is activated:
     - On Windows:
         ```sh 
@@ -65,7 +64,31 @@ Query Window            |  Plot Window
     - Use the main window to query exoplanet data.
 
     - Open the secondary window to visualize data with plots.
+        -  Use the main window to query exoplanet data.
+        - Open the secondary window to visualize data with plots.
 
+---
+## Release Version
+### For Windows
+1. Download the executable from the [GitHub Releases Page](https://github.com/Malcolmcjackson/NASA-Exoplanet-Query-App/releases).
+2. Extract '**exoplanet-query.zip**' using WinRAR or 7-Zip.
+3. Run the '**exoplanet_query.exe**' executable.
+
+### For Linux and macOS
+1. Download the executable from the [GitHub Releases Page](https://github.com/Malcolmcjackson/NASA-Exoplanet-Query-App/releases).
+2. Extract the downloaded file:
+    ```sh
+    tar -xzf exoplanet_query.tar.gz
+    ```
+3. Set executable permissions:
+    ```sh
+    chmod +x exoplanet_query
+    ```
+4. Run the executable:
+    ```sh
+    ./exoplanet_query
+    ```
+---
 ## Potential Improvements
 Potential features to be implemented in the future:
 
@@ -73,3 +96,5 @@ Potential features to be implemented in the future:
 - Implement more advanced data visualization options, such as 3D plots and interactive graphs.
 - Add support for filtering data by additional criteria (such as planet radius, mass, and distance from Earth).
 - Implement hyperlinking to the NASA Exoplanet website when a planet name is clicked for more detailed information.
+- Switch frameworks from PyQt6 to something more lightweight.
+- Deploy a web demo using Flask/Django and AWS.
