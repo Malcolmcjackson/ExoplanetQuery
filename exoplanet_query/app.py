@@ -79,17 +79,35 @@ with tab_plot:
     # -------------------------------
     # Axis selectors
     # -------------------------------
-    numeric_cols = [
-        "sy_dist", "pl_rade", "pl_masse", "pl_orbper", "st_rad", "pl_eqt"
-    ]
+    numeric_cols = {
+        "sy_dist": "Distance from Earth",
+        "pl_rade": "Planet Radius",
+        "pl_masse": "Planet Mass",
+        "pl_orbper": "Orbital Period",
+        "st_rad": "Star Radius",
+        "pl_eqt": "Equilibrium Temperature",
+        "disc_year": "Discovery Year"
+    }
+    
+    # Reverse mapping for label -> column lookup
+    label_to_col = {v: k for k, v in numeric_cols.items()}
+    col_list = list(numeric_cols.keys())
+    col_labels = list(numeric_cols.values())
 
     col1, col2 = st.columns(2)
 
     with col1:
-        x_axis = st.selectbox("X-axis", numeric_cols, index=numeric_cols.index("pl_rade"))
+        x_label = st.selectbox("X-axis", col_labels, index=col_labels.index("Planet Radius"))
+        x_axis = label_to_col[x_label]
 
+    # Filter y-axis to exclude the selected x-axis
+    y_list = [col for col in col_list if col != x_axis]
+    y_labels = [numeric_cols[col] for col in y_list]
+    
     with col2:
-        y_axis = st.selectbox("Y-axis", numeric_cols, index=numeric_cols.index("pl_masse"))
+        y_label = st.selectbox("Y-axis", y_labels, 
+                              index=y_labels.index("Planet Mass") if "Planet Mass" in y_labels else 0)
+        y_axis = label_to_col[y_label]
 
     # -------------------------------
     # Color-by (categorical options)
