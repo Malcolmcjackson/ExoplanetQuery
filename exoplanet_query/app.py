@@ -75,6 +75,8 @@ with tab_plot:
     st.write(f"**Displaying {len(plot_df):,} planets**")
 
     fig = radius_vs_mass_plot(data, trendline=True)
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
     st.plotly_chart(fig, use_container_width=True)
 
     # ================================================================
@@ -94,6 +96,8 @@ with tab_plot:
     """)
 
     fig2 = temperature_vs_distance_plot(data)
+    fig2.update_xaxes(fixedrange=True)
+    fig2.update_yaxes(fixedrange=True)
     st.plotly_chart(fig2, use_container_width=True)
 
     # ================================================================
@@ -113,7 +117,6 @@ with tab_plot:
 
     fig3 = discovery_year_bar_chart(data)
     st.plotly_chart(fig3, use_container_width=True)
-
 
     # ================================================================
     #  DISTANCE FROM EARTH HISTOGRAM (LOG SCALE VERSION)
@@ -161,11 +164,21 @@ with tab_plot:
         yaxis_title="Number of Planets",
     )
 
-    # ------------------------------
-    # Display it
-    # ------------------------------
-    st.plotly_chart(fig4, use_container_width=True)
+    # Disable zooming/panning
+    fig4.update_xaxes(fixedrange=True)
+    fig4.update_yaxes(fixedrange=True)
 
+    # Display (mobile-friendly)
+    st.plotly_chart(
+        fig4,
+        use_container_width=True,
+        config={
+            "scrollZoom": False,
+            "doubleClick": False,
+            "displayModeBar": False,
+            "staticPlot": False,
+        }
+    )
 
     # -------------------------------------------------
     # DISCOVERY METHOD COMPARISON (BOX PLOTS)

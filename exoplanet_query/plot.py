@@ -252,6 +252,9 @@ def discovery_year_bar_chart(df):
     fig.update_xaxes(range=[1988, counts["disc_year"].max() + 1])
     fig.update_layout(margin=dict(r=60))
 
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+
     return fig
 
 def distance_histogram(df):
@@ -303,6 +306,8 @@ def method_radius_boxplots(df):
         template="plotly_dark",
         points="outliers"
     )
+    fig_zoom.update_xaxes(fixedrange=True)
+    fig_zoom.update_yaxes(fixedrange=True)
     figs["zoom"] = fig_zoom
 
     # 2️⃣ FULL RANGE PLOT
@@ -315,6 +320,8 @@ def method_radius_boxplots(df):
         template="plotly_dark",
         points="outliers"
     )
+    fig_full.update_xaxes(fixedrange=True)
+    fig_full.update_yaxes(fixedrange=True)
     figs["full"] = fig_full
 
     return figs
