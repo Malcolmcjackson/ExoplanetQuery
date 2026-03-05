@@ -14,35 +14,10 @@ def pretty(col):
     return AXIS_LABELS.get(col, col)
 
 
-# --------------------------------------------------------------
-# 🌈 Median binning helper (kept lightweight)
-# --------------------------------------------------------------
-def bin_and_aggregate_data(x, y, bins=150):
+def radius_vs_mass_plot(df, trendline=True):
     """
-    Smooths noisy scatter data by computing median values in X-bins.
-    """
-    x = np.array(x)
-    y = np.array(y)
-
-    bin_edges = np.linspace(np.nanmin(x), np.nanmax(x), bins + 1)
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-    bin_indices = np.digitize(x, bin_edges) - 1
-
-    y_med = np.array([
-        np.nanmedian(y[bin_indices == i]) if np.any(bin_indices == i) else np.nan
-        for i in range(bins)
-    ])
-
-    df = pd.DataFrame({"x": bin_centers, "y_med": y_med})
-    return df.dropna()
-
-
-# --------------------------------------------------------------
-# 🌈 Curated Planet Radius vs Mass Plot
-# --------------------------------------------------------------
-def radius_vs_mass_plot(df, use_binning=False, trendline=True):
-    """
-    Creates the official curated plot: Planet Radius (R⊕) vs Mass (M⊕).
+    Creates the curated plot: Planet Radius (R⊕) vs Mass (M⊕)
+    WITHOUT any binning logic.
     """
 
     # Clean data
@@ -52,36 +27,9 @@ def radius_vs_mass_plot(df, use_binning=False, trendline=True):
     x = "pl_rade"
     y = "pl_masse"
 
-    # =============================================================
-    # ⭐ BINNED MODE (optional)
-    # =============================================================
-    if use_binning:
-        binned = bin_and_aggregate_data(clean[x], clean[y])
-
-        fig = px.scatter(
-            binned,
-            x="x",
-            y="y_med",
-            title=f"{pretty(x)} vs {pretty(y)} (Median Smoothed)",
-            labels={"x": pretty(x), "y_med": pretty(y)},
-            template="plotly_dark",
-        )
-
-        # Optional trendline applied to binned curve
-        if trendline and len(binned) > 2:
-            slope, intercept = np.polyfit(binned["x"], binned["y_med"], 1)
-            lx = np.array([binned["x"].min(), binned["x"].max()])
-            ly = slope * lx + intercept
-
-            fig.add_scatter(x=lx, y=ly, mode="lines",
-                            name="Trendline",
-                            line=dict(color="red", width=3))
-
-        return fig
-
-    # =============================================================
-    # ⭐ RAW SCATTER MODE (default)
-    # =============================================================
+    # ---------------------------------------------------------
+    # ⭐ RAW SCATTER PLOT (always)
+    # ---------------------------------------------------------
     fig = px.scatter(
         clean,
         x=x,
@@ -93,7 +41,9 @@ def radius_vs_mass_plot(df, use_binning=False, trendline=True):
         opacity=0.7,
     )
 
-    # Add OLS regression trendline (Plotly built-in)
+    # ---------------------------------------------------------
+    # ⭐ OPTIONAL TRENDLINE
+    # ---------------------------------------------------------
     if trendline:
         fit_df = px.scatter(
             clean,
@@ -105,7 +55,11 @@ def radius_vs_mass_plot(df, use_binning=False, trendline=True):
         trend = fit_df.data[-1]
         trend.line.width = 3
         trend.opacity = 0.9
+        trend.showlegend = False  # hide legend label
         fig.add_trace(trend)
+
+    # Remove legend entirely (looks cleaner)
+    fig.update_layout(showlegend=False)
 
     return fig
 
@@ -167,6 +121,8 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
                 name="Trendline",
                 line=dict(color="red", width=3)
             )
+        
+        fig.update_layout(showlegend=False)
 
         return fig
 
@@ -189,33 +145,53 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
     return fig
 
 def discovery_year_bar_chart(df):
-    """
-    Exoplanet discoveries per year.
-    A classic plot showing mission-driven spikes.
-    """
+    clean = df[df["disc_year"] > 1980].dropna(subset=["disc_year"]).copy()
 
-    # Keep only valid years
-    clean = df[["disc_year"]].dropna()
-    clean = clean[clean["disc_year"] > 1980]   # removes weird old placeholder values
-
-    # Count discoveries per year
-    counts = clean["disc_year"].value_counts().sort_index()
-
-    fig = px.bar(
-        x=counts.index,
-        y=counts.values,
-        labels={"x": "Discovery Year", "y": "Number of Planets Discovered"},
-        title="Exoplanet Discoveries Per Year",
-        template="plotly_dark"
+    # yearly counts
+    counts = (
+        clean.groupby("disc_year")
+        .size()
+        .reset_index(name="count")
+        .sort_values("disc_year")
     )
 
-    fig.update_traces(marker_color="#7FDBFF")  # pretty blue
+    counts["cumulative"] = counts["count"].cumsum()
+
+    # ⭐ Build cumulative frames
+    frames = []
+    for year in counts["disc_year"]:
+        subset = counts[counts["disc_year"] <= year].copy()
+        subset["frame"] = int(year)
+        frames.append(subset)
+
+    animated_df = pd.concat(frames, ignore_index=True)
+
+    fig = px.bar(
+        animated_df,
+        x="disc_year",
+        y="cumulative",
+        animation_frame="frame",   # use our custom frame column
+        range_x=[1988, 2025],
+        range_y=[0, animated_df["cumulative"].max()],
+        labels={
+            "disc_year": "Discovery Year",
+            "cumulative": "Total Planets Discovered",
+            "frame": "Year"
+        },
+        title="Cumulative Exoplanet Discoveries Over Time",
+        template="plotly_dark",
+    )
+
+    fig.update_traces(marker_color="#7FDBFF")
+
+    # slow animation
+    fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 400
+    fig.layout.updatemenus[0].buttons[0].args[1]["transition"]["duration"] = 200
+
+    fig.update_xaxes(range=[1988, counts["disc_year"].max() + 1])
+    fig.update_layout(margin=dict(r=60))
 
     return fig
-
-import plotly.express as px
-import numpy as np
-import pandas as pd
 
 def distance_histogram(df):
     """

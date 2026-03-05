@@ -119,13 +119,13 @@ with tab_plot:
 
     st.write(f"**Displaying {len(plot_df):,} planets**")
 
-    fig = radius_vs_mass_plot(data, use_binning=False, trendline=True)
+    fig = radius_vs_mass_plot(data, trendline=True)
     st.plotly_chart(fig, use_container_width=True)
 
 # ================================================================
 # 🌡️ TEMPERATURE vs ORBITAL DISTANCE SECTION
 # ================================================================
-    st.header("🌡️ Temperature vs Orbital Distance")
+    st.header("🌡️ Orbital Distance vs Temperature")
 
     st.markdown("""
     This plot illustrates how a planet's temperature depends on how far it orbits from its star:
