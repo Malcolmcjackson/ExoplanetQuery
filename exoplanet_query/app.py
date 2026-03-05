@@ -56,10 +56,10 @@ with tab_plot:
     st.markdown("""
     This classic exoplanet diagram reveals how planets group into different families:
 
-    • **Rocky super-Earths** tend to have low mass and small radii  
-    • **Mini-Neptunes** form a noticeable cluster with larger radii but not too high mass  
-    • **Gas giants** dominate the upper-right area with huge radii and masses  
-    • A subtle **radius gap** appears around ~1.5–2 R⊕  
+    • **Rocky super-Earths** tend to have low mass and small radii \n
+    • **Mini-Neptunes** form a noticeable cluster with larger radii but not too high mass \n
+    • **Gas giants** dominate the upper-right area with huge radii and masses \n
+    • A subtle **radius gap** appears around ~1.5-2 R⊕ \n
 
     This is one of the most important charts in exoplanet science!
     """)
@@ -87,10 +87,10 @@ with tab_plot:
     st.markdown("""
     This plot illustrates how a planet's temperature depends on how far it orbits from its star:
 
-    • **Hot Jupiters** roast at thousands of degrees because they orbit extremely close  
-    • **Warm Neptunes** sit in the middle regions  
-    • **Cool giants** orbit far out, receiving little starlight  
-    • Most *habitable-zone-like* planets fall into a narrow mid-temperature range
+    • **Hot Jupiters** roast at thousands of degrees because they orbit extremely close \n 
+    • **Warm Neptunes** sit in the middle regions \n
+    • **Cool giants** orbit far out, receiving little starlight \n
+    • Most *habitable-zone-like* planets fall into a narrow mid-temperature range \n
 
     This helps us understand where different kinds of worlds tend to form and survive.
     """)
@@ -107,12 +107,12 @@ with tab_plot:
     st.header("📅 Discovery Year")
 
     st.markdown("""
-    This plot illustrates how a planet's temperature depends on how far it orbits from its star:
+    This plot illustrates how we've discovered more and more planets as our technology continually improves:
 
-    • Before 2000, only a handful of planets were known    
-    • Kepler (2010-2013) discovered *thousands*, causing the iconic spike
-    • TESS (2018-present) continues adding new nearby planets              
-    • Improved radial velocity and transit techniques increased discovery rates 
+    • Before 2000, only a handful of planets were known \n   
+    • Kepler (2010-2013) discovered *thousands*, causing the iconic spike\n
+    • TESS (2018-present) continues adding new nearby planets \n            
+    • Improved radial velocity and transit techniques increased discovery rates \n
     """)
 
     fig3 = discovery_year_bar_chart(data)
@@ -126,10 +126,10 @@ with tab_plot:
     st.markdown("""
     This histogram shows how far the known exoplanets are from us.
 
-    • Only a small number of planets are within 50-100 light-years  
-    • Most known worlds are **hundreds** of light-years away  
-    • Kepler surveyed a region roughly 1,000-3,000 light-years from Earth  
-    • Telescopes discover whichever stars they *look at*; not necessarily the closest ones  
+    • Only a small number of planets are within 50-100 light-years \n
+    • Most known worlds are **hundreds** of light-years away \n
+    • Kepler surveyed a region roughly 1,000-3,000 light-years from Earth \n
+    • Telescopes discover whichever stars they *look at*; not necessarily the closest ones \n
 
     This tells us that our exoplanet catalog is shaped more by **where we looked**  
     than by where planets actually are.
@@ -190,13 +190,13 @@ with tab_plot:
     This section compares how different detection techniques influence  
     **which types of planets we’re most likely to find.**
 
-    Each method has its own strengths — and its own biases:
+    Each method has its own strengths; and its own biases:
 
-    • **Transit** finds tons of small and medium planets because it detects tiny dips in starlight  
-    • **Radial Velocity** excels at detecting massive planets tugging on their stars  
-    • **Imaging** can spot huge, young, glowing planets far from their stars  
-    • **Timing methods** detect planets in special, precise situations  
-    • Rare or niche techniques are grouped as **Other**  
+    • **Transit** finds tons of small and medium planets because it detects tiny dips in starlight \n
+    • **Radial Velocity** excels at detecting massive planets tugging on their stars \n
+    • **Imaging** can spot huge, young, glowing planets far from their stars \n
+    • **Timing methods** detect planets in special, precise situations \n 
+    • Rare or niche techniques are grouped as **Other** \n
 
     Because every method favors certain planets, their radius distributions  
     look *wildly* different.
