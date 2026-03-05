@@ -229,6 +229,22 @@ def discovery_year_bar_chart(df):
 
     fig.update_traces(marker_color="#7FDBFF")
 
+    # Remove the animation frame value ("Year=xxxx") from EVERY frame
+    for frame in fig.frames:
+        for trace in frame.data:
+            trace.hovertemplate = (
+                "Discovery Year=%{x}<br>"
+                "Total Planets Discovered=%{y}<extra></extra>"
+            )
+
+    # Also fix the initial (visible) traces
+    fig.update_traces(
+        hovertemplate=(
+            "Discovery Year=%{x}<br>"
+            "Total Planets Discovered=%{y}<extra></extra>"
+        )
+    )
+
     # slow animation
     fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 400
     fig.layout.updatemenus[0].buttons[0].args[1]["transition"]["duration"] = 200
