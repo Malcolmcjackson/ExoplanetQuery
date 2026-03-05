@@ -1,6 +1,8 @@
 import plotly.express as px
 import numpy as np
 import pandas as pd
+import streamlit as st
+
 
 # --------------------------------------------------------------
 # 🌈 Human-friendly axis labels
@@ -9,6 +11,16 @@ AXIS_LABELS = {
     "pl_rade": "Planet Radius (R⊕)",
     "pl_masse": "Planet Mass (M⊕)",
 }
+
+import statsmodels.api as sm
+
+def get_trendline_stats(df, xcol, ycol):
+    X = sm.add_constant(df[xcol])
+    model = sm.OLS(df[ycol], X).fit()
+    slope = model.params[xcol]
+    intercept = model.params['const']
+    r2 = model.rsquared
+    return slope, intercept, r2
 
 def pretty(col):
     return AXIS_LABELS.get(col, col)
@@ -59,7 +71,21 @@ def radius_vs_mass_plot(df, trendline=True):
         fig.add_trace(trend)
 
     # Remove legend entirely (looks cleaner)
+    
     fig.update_layout(showlegend=False)
+
+    slope, intercept, r2 = get_trendline_stats(clean, x, y)
+
+    fig.add_annotation(
+        xref="paper", yref="paper",
+        x=0.02, y=0.98,
+        text=f"y = {slope:.2f}x + {intercept:.2f}<br>R² = {r2:.3f}",
+        showarrow=False,
+        font=dict(color="white", size=13),
+        bgcolor="rgba(0,0,0,0.5)",
+        bordercolor="#7FDBFF",
+        borderwidth=1
+    )
 
     return fig
 
@@ -110,6 +136,7 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
         )
 
         # Add trendline to binned data
+        # Add trendline to binned data
         if trendline:
             slope, intercept = np.polyfit(binned_df["log_x"], binned_df["temp_med"], 1)
             lx = np.array([binned_df["log_x"].min(), binned_df["log_x"].max()])
@@ -121,6 +148,24 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
                 name="Trendline",
                 line=dict(color="red", width=3)
             )
+
+            # ⭐ Add annotation with trendline equation
+            r2 = np.corrcoef(binned_df["log_x"], binned_df["temp_med"])[0,1] ** 2
+
+            fig.add_annotation(
+                xref="paper", yref="paper",
+                x=0.02, y=0.98,          # top-left corner
+                text=(
+                    f"Trendline: T = {slope:.2f} × log₁₀(P) + {intercept:.2f}"
+                    f"<br>R² = {r2:.3f}"
+                ),
+                showarrow=False,
+                font=dict(color="white", size=12),
+                bgcolor="rgba(0,0,0,0.65)",
+                bordercolor="#7FDBFF",
+                borderwidth=1,
+                borderpad=4,
+            )
         
         fig.update_layout(showlegend=False)
 
@@ -129,20 +174,20 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
     # =====================================================
     # ⭐ RAW SCATTER (log x-axis)
     # =====================================================
-    fig = px.scatter(
-        clean,
-        x=x,
-        y=y,
-        hover_name="pl_name",
-        title="Orbital Distance vs Temperature",
-        labels={x: "Orbital Period (days)", y: "Equilibrium Temperature (K)"},
-        template="plotly_dark",
-        opacity=0.7,
-    )
+    # fig = px.scatter(
+    #     clean,
+    #     x=x,
+    #     y=y,
+    #     hover_name="pl_name",
+    #     title="Orbital Distance vs Temperature",
+    #     labels={x: "Orbital Period (days)", y: "Equilibrium Temperature (K)"},
+    #     template="plotly_dark",
+    #     opacity=0.7,
+    # )
 
-    fig.update_xaxes(type="log")
+    # fig.update_xaxes(type="log")
 
-    return fig
+    # return fig
 
 def discovery_year_bar_chart(df):
     clean = df[df["disc_year"] > 1980].dropna(subset=["disc_year"]).copy()
@@ -216,7 +261,6 @@ def distance_histogram(df):
         xaxis_title="Distance (parsecs)",
         yaxis_title="Number of Planets",
     )
-
     return fig
 
 def method_radius_boxplots(df):
