@@ -122,9 +122,9 @@ with tab_plot:
     fig = radius_vs_mass_plot(data, trendline=True)
     st.plotly_chart(fig, use_container_width=True)
 
-# ================================================================
-# 🌡️ TEMPERATURE vs ORBITAL DISTANCE SECTION
-# ================================================================
+    # ================================================================
+    # 🌡️ TEMPERATURE vs ORBITAL DISTANCE SECTION
+    # ================================================================
     st.header("🌡️ Orbital Distance vs Temperature")
 
     st.markdown("""
@@ -141,9 +141,9 @@ with tab_plot:
     fig2 = temperature_vs_distance_plot(data)
     st.plotly_chart(fig2, use_container_width=True)
 
-# ================================================================
-#  DISCOVERY YEAR BAR CHART
-# ================================================================
+    # ================================================================
+    #  DISCOVERY YEAR BAR CHART
+    # ================================================================
 
     st.header("📅 Discovery Year")
 
@@ -160,86 +160,86 @@ with tab_plot:
     st.plotly_chart(fig3, use_container_width=True)
 
 
-# ================================================================
-#  DISTANCE FROM EARTH HISTOGRAM (LOG SCALE VERSION)
-# ================================================================
-st.header("📏 Distance from Earth")
+    # ================================================================
+    #  DISTANCE FROM EARTH HISTOGRAM (LOG SCALE VERSION)
+    # ================================================================
+    st.header("📏 Distance from Earth")
 
-st.markdown("""
-This histogram shows how far the known exoplanets are from us.
+    st.markdown("""
+    This histogram shows how far the known exoplanets are from us.
 
-• Only a small number of planets are within 50-100 light-years  
-• Most known worlds are **hundreds** of light-years away  
-• Kepler surveyed a region roughly 1,000-3,000 light-years from Earth  
-• Telescopes discover whichever stars they *look at*; not necessarily the closest ones  
+    • Only a small number of planets are within 50-100 light-years  
+    • Most known worlds are **hundreds** of light-years away  
+    • Kepler surveyed a region roughly 1,000-3,000 light-years from Earth  
+    • Telescopes discover whichever stars they *look at*; not necessarily the closest ones  
 
-This tells us that our exoplanet catalog is shaped more by **where we looked**  
-than by where planets actually are.
-""")
+    This tells us that our exoplanet catalog is shaped more by **where we looked**  
+    than by where planets actually are.
+    """)
 
-# ------------------------------
-# Clean + transform data
-# ------------------------------
-clean = data[["sy_dist"]].dropna()
-clean = clean[clean["sy_dist"] > 0]  # remove invalid 0 values
+    # ------------------------------
+    # Clean + transform data
+    # ------------------------------
+    clean = data[["sy_dist"]].dropna()
+    clean = clean[clean["sy_dist"] > 0]  # remove invalid 0 values
 
-# log-transform distance
-clean["log_dist"] = np.log10(clean["sy_dist"])
+    # log-transform distance
+    clean["log_dist"] = np.log10(clean["sy_dist"])
 
-# ------------------------------
-# Create histogram
-# ------------------------------
-fig4 = px.histogram(
-    clean,
-    x="log_dist",
-    nbins=60,
-    title="Distance From Earth (log-scaled)",
-    labels={
-        "log_dist": "log₁₀(Distance in parsecs)",
-    },
-    template="plotly_dark"
-)
+    # ------------------------------
+    # Create histogram
+    # ------------------------------
+    fig4 = px.histogram(
+        clean,
+        x="log_dist",
+        nbins=60,
+        title="Distance From Earth (log-scaled)",
+        labels={
+            "log_dist": "log₁₀(Distance in parsecs)",
+        },
+        template="plotly_dark"
+    )
 
-fig4.update_traces(marker_color="#66C2FF", opacity=0.75)
-fig4.update_layout(
-    xaxis_title="log₁₀(Distance [pc])",
-    yaxis_title="Number of Planets",
-)
+    fig4.update_traces(marker_color="#66C2FF", opacity=0.75)
+    fig4.update_layout(
+        xaxis_title="log₁₀(Distance [pc])",
+        yaxis_title="Number of Planets",
+    )
 
-# ------------------------------
-# Display it
-# ------------------------------
-st.plotly_chart(fig4, use_container_width=True)
+    # ------------------------------
+    # Display it
+    # ------------------------------
+    st.plotly_chart(fig4, use_container_width=True)
 
 
-# -------------------------------------------------
-# DISCOVERY METHOD COMPARISON (BOX PLOTS)
-# -------------------------------------------------
+    # -------------------------------------------------
+    # DISCOVERY METHOD COMPARISON (BOX PLOTS)
+    # -------------------------------------------------
 
-st.header("🔍 Discovery Method Comparison")
+    st.header("🔍 Discovery Method Comparison")
 
-st.markdown("""
-This section compares how different detection techniques influence  
-**which types of planets we’re most likely to find.**
+    st.markdown("""
+    This section compares how different detection techniques influence  
+    **which types of planets we’re most likely to find.**
 
-Each method has its own strengths — and its own biases:
+    Each method has its own strengths — and its own biases:
 
-• **Transit** finds tons of small and medium planets because it detects tiny dips in starlight  
-• **Radial Velocity** excels at detecting massive planets tugging on their stars  
-• **Imaging** can spot huge, young, glowing planets far from their stars  
-• **Timing methods** detect planets in special, precise situations  
-• Rare or niche techniques are grouped as **Other**  
+    • **Transit** finds tons of small and medium planets because it detects tiny dips in starlight  
+    • **Radial Velocity** excels at detecting massive planets tugging on their stars  
+    • **Imaging** can spot huge, young, glowing planets far from their stars  
+    • **Timing methods** detect planets in special, precise situations  
+    • Rare or niche techniques are grouped as **Other**  
 
-Because every method favors certain planets, their radius distributions  
-look *wildly* different.
+    Because every method favors certain planets, their radius distributions  
+    look *wildly* different.
 
-This makes discovery methods one of the biggest factors shaping our exoplanet catalog.
-""")
+    This makes discovery methods one of the biggest factors shaping our exoplanet catalog.
+    """)
 
-figs = method_radius_boxplots(data)
+    figs = method_radius_boxplots(data)
 
-st.subheader("Planet Radius by Discovery Method (Zoomed)")
-st.plotly_chart(figs["zoom"], use_container_width=True)
+    st.subheader("Planet Radius by Discovery Method (Zoomed)")
+    st.plotly_chart(figs["zoom"], use_container_width=True)
 
-st.subheader("Planet Radius by Discovery Method (Full Range)")
-st.plotly_chart(figs["full"], use_container_width=True)
+    st.subheader("Planet Radius by Discovery Method (Full Range)")
+    st.plotly_chart(figs["full"], use_container_width=True)
