@@ -1,7 +1,24 @@
 import streamlit as st
+import plotly.express as px
+import numpy as np
 from database.data_loader import get_exoplanet_data
 from controller.controller import query_exoplanets
-from plot import build_plot
+from plot import method_radius_boxplots, radius_vs_mass_plot, temperature_vs_distance_plot, discovery_year_bar_chart, distance_histogram, method_radius_boxplots
+
+# Friendly labels for query filters
+QUERY_LABELS = {
+    "pl_name": "Planet Name",
+    "disc_year": "Discovery Year",
+    "discoverymethod": "Discovery Method",
+    "hostname": "Host Star",
+    "disc_facility": "Discovery Facility",
+    "sy_dist": "Distance from Earth (pc)",
+    "pl_rade": "Planet Radius (R⊕)",
+    "pl_masse": "Planet Mass (M⊕)",
+    "pl_orbper": "Orbital Period (days)",
+    "st_rad": "Star Radius (R☉)",
+    "pl_eqt": "Equilibrium Temperature (K)"
+}
 
 # -------------------------------
 # 🚀 Page Setup
@@ -36,24 +53,27 @@ with tab_query:
 
     st.sidebar.header("Filter Options")
 
-    planet_name = st.sidebar.text_input("Planet name:")
+    # Friendly labels for dropdowns
     discovery_year = st.sidebar.selectbox(
-        "Discovery year:", 
+        QUERY_LABELS["disc_year"],
         ["Any", *sorted(x for x in data["disc_year"].dropna().unique())]
     )
 
+    planet_name = st.sidebar.text_input(QUERY_LABELS["pl_name"])
+
     method = st.sidebar.selectbox(
-        "Discovery method:", 
+        QUERY_LABELS["discoverymethod"],
         ["Any", *sorted(x for x in data["discoverymethod"].dropna().unique())]
     )
 
-    host_name = st.sidebar.text_input("Host star:")
+    host_name = st.sidebar.text_input(QUERY_LABELS["hostname"])
 
     facility = st.sidebar.selectbox(
-        "Discovery facility:",
+        QUERY_LABELS["disc_facility"],
         ["Any", *sorted(x for x in data["disc_facility"].dropna().unique())]
     )
 
+    # Query execution
     if st.sidebar.button("Run Query"):
 
         filtered = query_exoplanets(
@@ -65,87 +85,161 @@ with tab_query:
             facility=None if facility == "Any" else facility,
         )
 
+        # Apply friendly labels to dataframe columns
+        renamed = filtered.rename(columns=QUERY_LABELS)
+
         st.subheader("Query Results")
-        st.dataframe(filtered, use_container_width=True)
-
-
+        st.dataframe(renamed, use_container_width=True)
+        
 # ================================================================
-# 📊 TAB 2 — PLOT PAGE
+# 📊 TAB 2 — PLANET RADIUS vs MASS (CURATED VISUAL)
 # ================================================================
 with tab_plot:
 
-    st.header("📊 Exoplanet Data Visualization")
+    st.header("📊 Planet Radius vs Planet Mass")
+
+    st.markdown("""
+    This classic exoplanet diagram reveals how planets group into different families:
+
+    • **Rocky super-Earths** tend to have low mass and small radii  
+    • **Mini-Neptunes** form a noticeable cluster with larger radii but not too high mass  
+    • **Gas giants** dominate the upper-right area with huge radii and masses  
+    • A subtle **radius gap** appears around ~1.5–2 R⊕  
+
+    This is one of the most important charts in exoplanet science!
+    """)
 
     # -------------------------------
-    # Axis selectors
+    # Clean DF for plotting
     # -------------------------------
-    numeric_cols = {
-        "sy_dist": "Distance from Earth",
-        "pl_rade": "Planet Radius",
-        "pl_masse": "Planet Mass",
-        "pl_orbper": "Orbital Period",
-        "st_rad": "Star Radius",
-        "pl_eqt": "Equilibrium Temperature",
-        "disc_year": "Discovery Year"
-    }
-    
-    # Reverse mapping for label -> column lookup
-    label_to_col = {v: k for k, v in numeric_cols.items()}
-    col_list = list(numeric_cols.keys())
-    col_labels = list(numeric_cols.values())
+    plot_df = data[["pl_name", "pl_rade", "pl_masse"]].dropna()
 
-    col1, col2 = st.columns(2)
+    # Remove impossible zero values
+    plot_df = plot_df[(plot_df["pl_rade"] > 0) & (plot_df["pl_masse"] > 0)]
 
-    with col1:
-        x_label = st.selectbox("X-axis", col_labels, index=col_labels.index("Planet Radius"))
-        x_axis = label_to_col[x_label]
+    st.write(f"**Displaying {len(plot_df):,} planets**")
 
-    # Filter y-axis to exclude the selected x-axis
-    y_list = [col for col in col_list if col != x_axis]
-    y_labels = [numeric_cols[col] for col in y_list]
-    
-    with col2:
-        y_label = st.selectbox("Y-axis", y_labels, 
-                              index=y_labels.index("Planet Mass") if "Planet Mass" in y_labels else 0)
-        y_axis = label_to_col[y_label]
-
-    # -------------------------------
-    # Color-by (categorical options)
-    # -------------------------------
-    color_options = ["None", "discoverymethod", "disc_facility", "hostname"]
-
-    color_by = st.selectbox("Color points by:", color_options)
-
-    # -------------------------------
-    # Toggles
-    # -------------------------------
-    binned = st.checkbox("Smooth / Bin data (200 bins)", value=False)
-    trendline = st.checkbox("Show trendline", value=True)
-
-    # -------------------------------
-    # Filter dataset by columns that exist
-    # -------------------------------
-    plot_df = data[[c for c in data.columns if c in ["pl_name", x_axis, y_axis, *color_options]]].dropna()
-
-    # -------------------------------
-    # Show count
-    # -------------------------------
-    st.write(f"**Showing {len(plot_df):,} planets**")
-
-    # -------------------------------
-    # Build figure
-    # -------------------------------
-    fig = build_plot(
-        plot_df,
-        x=x_axis,
-        y=y_axis,
-        binned=binned,
-        trendline=trendline
-    )
-
-    # Add color-by if applicable
-    if color_by != "None":
-        fig.update_traces(marker=dict(color=plot_df[color_by], colorscale="Turbo"), selector=dict(mode="markers"))
-
-    # Display it
+    fig = radius_vs_mass_plot(data, use_binning=False, trendline=True)
     st.plotly_chart(fig, use_container_width=True)
+
+# ================================================================
+# 🌡️ TEMPERATURE vs ORBITAL DISTANCE SECTION
+# ================================================================
+    st.header("🌡️ Temperature vs Orbital Distance")
+
+    st.markdown("""
+    This plot illustrates how a planet's temperature depends on how far it orbits from its star:
+
+    • **Hot Jupiters** roast at thousands of degrees because they orbit extremely close  
+    • **Warm Neptunes** sit in the middle regions  
+    • **Cool giants** orbit far out, receiving little starlight  
+    • Most *habitable-zone-like* planets fall into a narrow mid-temperature range
+
+    This helps us understand where different kinds of worlds tend to form and survive.
+    """)
+
+    fig2 = temperature_vs_distance_plot(data)
+    st.plotly_chart(fig2, use_container_width=True)
+
+# ================================================================
+#  DISCOVERY YEAR BAR CHART
+# ================================================================
+
+    st.header("📅 Discovery Year")
+
+    st.markdown("""
+    This plot illustrates how a planet's temperature depends on how far it orbits from its star:
+
+    • Before 2000, only a handful of planets were known    
+    • Kepler (2010-2013) discovered *thousands*, causing the iconic spike
+    • TESS (2018-present) continues adding new nearby planets              
+    • Improved radial velocity and transit techniques increased discovery rates 
+    """)
+
+    fig3 = discovery_year_bar_chart(data)
+    st.plotly_chart(fig3, use_container_width=True)
+
+
+# ================================================================
+#  DISTANCE FROM EARTH HISTOGRAM (LOG SCALE VERSION)
+# ================================================================
+st.header("📏 Distance from Earth")
+
+st.markdown("""
+This histogram shows how far the known exoplanets are from us.
+
+• Only a small number of planets are within 50-100 light-years  
+• Most known worlds are **hundreds** of light-years away  
+• Kepler surveyed a region roughly 1,000-3,000 light-years from Earth  
+• Telescopes discover whichever stars they *look at*; not necessarily the closest ones  
+
+This tells us that our exoplanet catalog is shaped more by **where we looked**  
+than by where planets actually are.
+""")
+
+# ------------------------------
+# Clean + transform data
+# ------------------------------
+clean = data[["sy_dist"]].dropna()
+clean = clean[clean["sy_dist"] > 0]  # remove invalid 0 values
+
+# log-transform distance
+clean["log_dist"] = np.log10(clean["sy_dist"])
+
+# ------------------------------
+# Create histogram
+# ------------------------------
+fig4 = px.histogram(
+    clean,
+    x="log_dist",
+    nbins=60,
+    title="Distance From Earth (log-scaled)",
+    labels={
+        "log_dist": "log₁₀(Distance in parsecs)",
+    },
+    template="plotly_dark"
+)
+
+fig4.update_traces(marker_color="#66C2FF", opacity=0.75)
+fig4.update_layout(
+    xaxis_title="log₁₀(Distance [pc])",
+    yaxis_title="Number of Planets",
+)
+
+# ------------------------------
+# Display it
+# ------------------------------
+st.plotly_chart(fig4, use_container_width=True)
+
+
+# -------------------------------------------------
+# DISCOVERY METHOD COMPARISON (BOX PLOTS)
+# -------------------------------------------------
+
+st.header("🔍 Discovery Method Comparison")
+
+st.markdown("""
+This section compares how different detection techniques influence  
+**which types of planets we’re most likely to find.**
+
+Each method has its own strengths — and its own biases:
+
+• **Transit** finds tons of small and medium planets because it detects tiny dips in starlight  
+• **Radial Velocity** excels at detecting massive planets tugging on their stars  
+• **Imaging** can spot huge, young, glowing planets far from their stars  
+• **Timing methods** detect planets in special, precise situations  
+• Rare or niche techniques are grouped as **Other**  
+
+Because every method favors certain planets, their radius distributions  
+look *wildly* different.
+
+This makes discovery methods one of the biggest factors shaping our exoplanet catalog.
+""")
+
+figs = method_radius_boxplots(data)
+
+st.subheader("Planet Radius by Discovery Method (Zoomed)")
+st.plotly_chart(figs["zoom"], use_container_width=True)
+
+st.subheader("Planet Radius by Discovery Method (Full Range)")
+st.plotly_chart(figs["full"], use_container_width=True)
