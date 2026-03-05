@@ -87,6 +87,8 @@ def radius_vs_mass_plot(df, trendline=True):
         borderwidth=1
     )
 
+    fig.update_layout(dragmode=False)
+
     return fig
 
 # --------------------------------------------------------------
@@ -168,6 +170,8 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
             )
         
         fig.update_layout(showlegend=False)
+
+        fig.update_layout(dragmode=False)
 
         return fig
 
@@ -255,6 +259,8 @@ def discovery_year_bar_chart(df):
     fig.update_xaxes(fixedrange=True)
     fig.update_yaxes(fixedrange=True)
 
+    fig.update_layout(dragmode=False)
+
     return fig
 
 def distance_histogram(df):
@@ -308,6 +314,7 @@ def method_radius_boxplots(df):
     )
     fig_zoom.update_xaxes(fixedrange=True)
     fig_zoom.update_yaxes(fixedrange=True)
+    fig_zoom.update_layout(dragmode=False)
     figs["zoom"] = fig_zoom
 
     # 2️⃣ FULL RANGE PLOT
@@ -322,6 +329,7 @@ def method_radius_boxplots(df):
     )
     fig_full.update_xaxes(fixedrange=True)
     fig_full.update_yaxes(fixedrange=True)
+    fig_full.update_layout(dragmode=False)
     figs["full"] = fig_full
 
     return figs
