@@ -43,56 +43,11 @@ data = load_data()
 # -------------------------------
 # 🚀 2. TABS (Query + Plot)
 # -------------------------------
-tab_query, tab_plot = st.tabs(["🔍 Query", "📊 Plot"])
+tab_plot, tab_query = st.tabs(["📊 Plot", "🔍 Query"])
 
 
 # ================================================================
-# 🔍 TAB 1 — QUERY PAGE
-# ================================================================
-with tab_query:
-
-    st.sidebar.header("Filter Options")
-
-    # Friendly labels for dropdowns
-    discovery_year = st.sidebar.selectbox(
-        QUERY_LABELS["disc_year"],
-        ["Any", *sorted(x for x in data["disc_year"].dropna().unique())]
-    )
-
-    planet_name = st.sidebar.text_input(QUERY_LABELS["pl_name"])
-
-    method = st.sidebar.selectbox(
-        QUERY_LABELS["discoverymethod"],
-        ["Any", *sorted(x for x in data["discoverymethod"].dropna().unique())]
-    )
-
-    host_name = st.sidebar.text_input(QUERY_LABELS["hostname"])
-
-    facility = st.sidebar.selectbox(
-        QUERY_LABELS["disc_facility"],
-        ["Any", *sorted(x for x in data["disc_facility"].dropna().unique())]
-    )
-
-    # Query execution
-    if st.sidebar.button("Run Query"):
-
-        filtered = query_exoplanets(
-            data,
-            name=planet_name,
-            year=None if discovery_year == "Any" else discovery_year,
-            method=None if method == "Any" else method,
-            host=host_name,
-            facility=None if facility == "Any" else facility,
-        )
-
-        # Apply friendly labels to dataframe columns
-        renamed = filtered.rename(columns=QUERY_LABELS)
-
-        st.subheader("Query Results")
-        st.dataframe(renamed, use_container_width=True)
-        
-# ================================================================
-# 📊 TAB 2 — PLANET RADIUS vs MASS (CURATED VISUAL)
+# 📊 TAB 1 — PLANET RADIUS vs MASS (CURATED VISUAL)
 # ================================================================
 with tab_plot:
 
@@ -243,3 +198,49 @@ with tab_plot:
 
     st.subheader("Planet Radius by Discovery Method (Full Range)")
     st.plotly_chart(figs["full"], use_container_width=True)
+
+# ================================================================
+# 🔍 TAB 2 — QUERY PAGE
+# ================================================================
+with tab_query:
+
+    st.sidebar.header("Filter Options")
+
+    # Friendly labels for dropdowns
+    discovery_year = st.sidebar.selectbox(
+        QUERY_LABELS["disc_year"],
+        ["Any", *sorted(x for x in data["disc_year"].dropna().unique())]
+    )
+
+    planet_name = st.sidebar.text_input(QUERY_LABELS["pl_name"])
+
+    method = st.sidebar.selectbox(
+        QUERY_LABELS["discoverymethod"],
+        ["Any", *sorted(x for x in data["discoverymethod"].dropna().unique())]
+    )
+
+    host_name = st.sidebar.text_input(QUERY_LABELS["hostname"])
+
+    facility = st.sidebar.selectbox(
+        QUERY_LABELS["disc_facility"],
+        ["Any", *sorted(x for x in data["disc_facility"].dropna().unique())]
+    )
+
+    # Query execution
+    if st.sidebar.button("Run Query"):
+
+        filtered = query_exoplanets(
+            data,
+            name=planet_name,
+            year=None if discovery_year == "Any" else discovery_year,
+            method=None if method == "Any" else method,
+            host=host_name,
+            facility=None if facility == "Any" else facility,
+        )
+
+        # Apply friendly labels to dataframe columns
+        renamed = filtered.rename(columns=QUERY_LABELS)
+
+        st.subheader("Query Results")
+        st.dataframe(renamed, use_container_width=True)
+        
