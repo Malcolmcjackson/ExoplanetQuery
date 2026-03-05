@@ -204,31 +204,31 @@ with tab_plot:
 # ================================================================
 with tab_query:
 
-    st.sidebar.header("Filter Options")
+    st.header("🔍 Filter Options")
 
-    # Friendly labels for dropdowns
-    discovery_year = st.sidebar.selectbox(
-        QUERY_LABELS["disc_year"],
-        ["Any", *sorted(x for x in data["disc_year"].dropna().unique())]
-    )
+    # --- Filters inside the tab ---
+    col1, col2 = st.columns(2)
 
-    planet_name = st.sidebar.text_input(QUERY_LABELS["pl_name"])
+    with col1:
+        planet_name = st.text_input(QUERY_LABELS["pl_name"])
+        method = st.selectbox(
+            QUERY_LABELS["discoverymethod"],
+            ["Any", *sorted(x for x in data["discoverymethod"].dropna().unique())]
+        )
+        facility = st.selectbox(
+            QUERY_LABELS["disc_facility"],
+            ["Any", *sorted(x for x in data["disc_facility"].dropna().unique())]
+        )
 
-    method = st.sidebar.selectbox(
-        QUERY_LABELS["discoverymethod"],
-        ["Any", *sorted(x for x in data["discoverymethod"].dropna().unique())]
-    )
+    with col2:
+        discovery_year = st.selectbox(
+            QUERY_LABELS["disc_year"],
+            ["Any", *sorted(x for x in data["disc_year"].dropna().unique())]
+        )
+        host_name = st.text_input(QUERY_LABELS["hostname"])
 
-    host_name = st.sidebar.text_input(QUERY_LABELS["hostname"])
-
-    facility = st.sidebar.selectbox(
-        QUERY_LABELS["disc_facility"],
-        ["Any", *sorted(x for x in data["disc_facility"].dropna().unique())]
-    )
-
-    # Query execution
-    if st.sidebar.button("Run Query"):
-
+    # --- Run Query Button ---
+    if st.button("Run Query"):
         filtered = query_exoplanets(
             data,
             name=planet_name,
@@ -238,7 +238,6 @@ with tab_query:
             facility=None if facility == "Any" else facility,
         )
 
-        # Apply friendly labels to dataframe columns
         renamed = filtered.rename(columns=QUERY_LABELS)
 
         st.subheader("Query Results")
