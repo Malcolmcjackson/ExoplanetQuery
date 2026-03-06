@@ -10,6 +10,7 @@ AXIS_LABELS = {
 }
 
 def get_trendline_stats(df, xcol, ycol):
+    """Calculate OLS trendline statistics (slope, intercept, R²)."""
     X = sm.add_constant(df[xcol])
     model = sm.OLS(df[ycol], X).fit()
     slope = model.params[xcol]
@@ -18,17 +19,21 @@ def get_trendline_stats(df, xcol, ycol):
     return slope, intercept, r2
 
 def pretty(col):
+    """Return human-friendly axis label for column name."""
     return AXIS_LABELS.get(col, col)
 
 def radius_vs_mass_plot(df, trendline=True):
     """
-    Curated plot: Planet Radius (R⊕) vs Planet Mass (M⊕)
-    Cleaned, filtered, fully self-contained.
+    Create a scatter plot of Planet Radius (R⊕) vs Planet Mass (M⊕).
+    
+    Includes optional OLS trendline and statistics annotation.
+    Mobile-friendly with disabled zoom/pan.
     """
-
     # Clean + sanitize data
-    clean = df[["pl_name", "pl_rade", "pl_masse"]].dropna()
-    clean = clean[(clean["pl_rade"] > 0) & (clean["pl_masse"] > 0)]
+    clean = df.loc[
+        (df["pl_rade"] > 0) & (df["pl_masse"] > 0),
+        ["pl_name", "pl_rade", "pl_masse"]
+    ].dropna()
 
     x = "pl_rade"
     y = "pl_masse"
@@ -84,13 +89,16 @@ def radius_vs_mass_plot(df, trendline=True):
 
     return fig
 
-# --------------------------------------------------------------
-# Temperature vs Orbital Distance Plot
-# --------------------------------------------------------------
-def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
 
+def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
+    """
+    Create a plot of Orbital Distance vs Temperature with optional log-binning.
+    
+    Bins orbital periods in log-space to reduce skew and includes optional trendline.
+    Mobile-friendly with disabled zoom/pan.
+    """
     clean = df[["pl_name", "pl_eqt", "pl_orbper"]].dropna()
-    clean = clean[(clean["pl_eqt"] > 0) & (clean["pl_orbper"] > 0)]
+    clean = clean[(clean["pl_eqt"] > 0) & (clean["pl_orbper"] > 0)].copy()
 
     x = "pl_orbper"   # orbital period (proxy for distance)
     y = "pl_eqt"      # equilibrium temperature
@@ -146,7 +154,7 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
 
             fig.add_annotation(
                 xref="paper", yref="paper",
-                x=0.02, y=0.98,          # top-left corner
+                x=0.02, y=0.98,
                 text=(
                     f"Trendline: T = {slope:.2f} × log₁₀(P) + {intercept:.2f}"
                     f"<br>R² = {r2:.3f}"
@@ -166,10 +174,14 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
 
         return fig
 
-# --------------------------------------------------------------
-# Animated Discovery Year Bar Chart
-# --------------------------------------------------------------
+
 def discovery_year_bar_chart(df):
+    """
+    Create an animated cumulative bar chart of exoplanet discoveries by year.
+    
+    Shows cumulative count from 1980 onwards with frame-by-frame animation.
+    Mobile-friendly with disabled zoom/pan.
+    """
     clean = df[df["disc_year"] > 1980].dropna(subset=["disc_year"]).copy()
 
     # yearly counts
@@ -195,7 +207,7 @@ def discovery_year_bar_chart(df):
         animated_df,
         x="disc_year",
         y="cumulative",
-        animation_frame="frame",   # use custom frame column
+        animation_frame="frame",
         range_x=[1988, 2025],
         range_y=[0, animated_df["cumulative"].max()],
         labels={
@@ -226,8 +238,11 @@ def discovery_year_bar_chart(df):
     )
 
     # slow down animation
-    fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 400
-    fig.layout.updatemenus[0].buttons[0].args[1]["transition"]["duration"] = 200
+    try:
+        fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 400
+        fig.layout.updatemenus[0].buttons[0].args[1]["transition"]["duration"] = 200
+    except (IndexError, KeyError, AttributeError):
+        pass
 
     fig.update_xaxes(range=[1988, counts["disc_year"].max() + 1])
     fig.update_layout(margin=dict(r=60))
@@ -239,13 +254,13 @@ def discovery_year_bar_chart(df):
 
     return fig
 
+
 def distance_histogram(df):
     """
-    Curated histogram of exoplanet distances from Earth.
-    Uses log10(distance) scaling, mobile-friendly, fully styled.
+    Create a histogram of exoplanet distances from Earth using log10 scaling.
+    
+    Mobile-friendly with disabled zoom/pan and styled dark theme.
     """
-
-    # Clean + transform data
     clean = df[["sy_dist"]].dropna()
     clean = clean[clean["sy_dist"] > 0]
     clean["log_dist"] = np.log10(clean["sy_dist"])
@@ -276,16 +291,21 @@ def distance_histogram(df):
 
     return fig
 
-def method_radius_boxplots(df):
+
+def method_radius_boxplots(df, threshold=30):
+    """
+    Create boxplots of planet radius grouped by discovery method.
+    
+    Returns both zoomed (≤ 30 R⊕) and full-range plots with rare methods grouped as 'Other'.
+    Mobile-friendly with disabled zoom/pan.
+    """
     clean = df[["pl_rade", "discoverymethod"]].dropna()
     clean = clean[clean["pl_rade"] > 0]
 
     # Group rare methods into "Other"
     method_counts = clean["discoverymethod"].value_counts()
-    keep = method_counts[method_counts > 30].index
-    clean["method_group"] = clean["discoverymethod"].apply(
-        lambda m: m if m in keep else "Other"
-    )
+    keep = method_counts[method_counts > threshold].index
+    clean["method_group"] = clean["discoverymethod"].where(clean["discoverymethod"].isin(keep), "Other")
 
     figs = {}
 
