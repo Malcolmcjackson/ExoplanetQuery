@@ -1,6 +1,6 @@
 ## TODO
 - [x] Update intro
-- [ ] Update screenshots from pyqt6 to streamlit demo
+- [x] Update screenshots from pyqt6 to streamlit demo
 - [ ] Update manual setup section
 
 
@@ -34,12 +34,20 @@ Results appear in a clean, sortable table with friendly labels.
 ### 🌍 Fully Web-Based
 #### No installation required; runs directly in your browser.
 
-# Screenshots
+## 📸 Visualization Gallery
 
-Plot View            |  Query View
-:-------------------------:|:-------------------------:
-  ![Main Window](screenshots/main_window.png)  |    ![Secondary Window](screenshots/secondary_window.png)
----
+| Planet Radius vs Mass | Temperature vs Orbital Distance |
+|----------------------|----------------------------------|
+| ![](screenshots/radius_mass.png) | ![](screenshots/temp_distance.png) |
+
+| Cumulative Discoveries (Animated) | Distance From Earth Histogram |
+|-----------------------------------|-------------------------------|
+| ![](screenshots/discovery_year.png) | ![](screenshots/distance_hist.png) |
+
+| Discovery Method Radius Boxplots (Zoomed) | Full Range Boxplots |
+|-------------------------------------------|----------------------|
+| ![](screenshots/method_zoom.png) | ![](screenshots/method_full.png) |
+
 
 # 📦 Project Structure
 ```
