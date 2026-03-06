@@ -1,18 +1,58 @@
-<h3 align="center">NASA-Exoplanet-Query-App</h3>
-  <p align="center"> An application that allows users to query and visualize NASA's exoplanet archive, written in Python</p>
+## TODO
+- [x] Update intro
+- [ ] Update screenshots from pyqt6 to streamlit demo
+- [ ] Update manual setup section
 
-## Features
-- Query exoplanet data by name, discovery year, method, host name, and facility.
-- Display results in a sortable table.
-- Generate customizable plots for data visualization.
 
-## Screenshots
 
-Query Window            |  Plot Window
+<h1 align="center">🔭 NASA Exoplanet Query App</h1>
+<p align="center"> A Streamlit-powered web application for exploring NASA’s Exoplanet Archive through interactive queries and engaging visualizations. </p>
+
+<p align="center"> 🚀 Live Demo: <a href="https://exoplanetquery.streamlit.app">exoplanetquery.streamlit.app</a> </p>
+
+# 🌟 Features
+
+### 🔍 Interactive Querying
+#### Filter planets by:
+- Name
+- Discovery Year
+- Discovery Method
+- Host Star
+- Discovery Facility
+- And more!
+
+Results appear in a clean, sortable table with friendly labels.
+
+### 📊 Curated Scientific Visualizations
+#### All charts are built with Plotly and tuned for mobile:
+- **Planet Radius vs Planet Mass** (with trendline + R² annotation)
+- **Orbital Distance vs Temperature** (log-binned smoothing option)
+- **Cumulative Exoplanet Discoveries Over Time** (animated!)
+- **Distance From Earth Histogram** (log-distance scaling)
+- **Discovery Method Radius Distributions** (zoomed + full-range boxplots)
+
+### 🌍 Fully Web-Based
+#### No installation required; runs directly in your browser.
+
+# Screenshots
+
+Plot View            |  Query View
 :-------------------------:|:-------------------------:
   ![Main Window](screenshots/main_window.png)  |    ![Secondary Window](screenshots/secondary_window.png)
-
 ---
+
+# 📦 Project Structure
+```
+exoplanet_query/
+│
+├── app.py                 # Streamlit UI
+├── controller/            # Query filtering logic
+├── database/              # Data loading / caching
+├── plot/                  # Plot construction functions
+├── screenshots/           # Demo screenshots
+└── requirements.txt
+```
+
 ## Manual Setup
 ### Prerequisites
 - Python 3.6+
