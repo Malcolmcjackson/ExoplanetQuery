@@ -1,18 +1,13 @@
 import plotly.express as px
 import numpy as np
 import pandas as pd
-import streamlit as st
+import statsmodels.api as sm
 
-
-# --------------------------------------------------------------
-# 🌈 Human-friendly axis labels
-# --------------------------------------------------------------
+# Human-friendly axis labels
 AXIS_LABELS = {
     "pl_rade": "Planet Radius (R⊕)",
     "pl_masse": "Planet Mass (M⊕)",
 }
-
-import statsmodels.api as sm
 
 def get_trendline_stats(df, xcol, ycol):
     X = sm.add_constant(df[xcol])
@@ -25,37 +20,35 @@ def get_trendline_stats(df, xcol, ycol):
 def pretty(col):
     return AXIS_LABELS.get(col, col)
 
-
 def radius_vs_mass_plot(df, trendline=True):
     """
-    Creates the curated plot: Planet Radius (R⊕) vs Mass (M⊕)
-    WITHOUT any binning logic.
+    Curated plot: Planet Radius (R⊕) vs Planet Mass (M⊕)
+    Cleaned, filtered, fully self-contained.
     """
 
-    # Clean data
+    # Clean + sanitize data
     clean = df[["pl_name", "pl_rade", "pl_masse"]].dropna()
     clean = clean[(clean["pl_rade"] > 0) & (clean["pl_masse"] > 0)]
 
     x = "pl_rade"
     y = "pl_masse"
 
-    # ---------------------------------------------------------
-    # ⭐ RAW SCATTER PLOT (always)
-    # ---------------------------------------------------------
+    # Base scatter plot
     fig = px.scatter(
         clean,
         x=x,
         y=y,
         hover_name="pl_name",
-        title=f"{pretty(x)} vs {pretty(y)}",
-        labels={x: pretty(x), y: pretty(y)},
+        title="Planet Radius (R⊕) vs Planet Mass (M⊕)",
+        labels={
+            "pl_rade": "Planet Radius (R⊕)",
+            "pl_masse": "Planet Mass (M⊕)"
+        },
         template="plotly_dark",
         opacity=0.7,
     )
 
-    # ---------------------------------------------------------
-    # ⭐ OPTIONAL TRENDLINE
-    # ---------------------------------------------------------
+    # Optional OLS Trendline
     if trendline:
         fit_df = px.scatter(
             clean,
@@ -67,32 +60,32 @@ def radius_vs_mass_plot(df, trendline=True):
         trend = fit_df.data[-1]
         trend.line.width = 3
         trend.opacity = 0.9
-        trend.showlegend = False  # hide legend label
+        trend.showlegend = False
         fig.add_trace(trend)
 
-    # Remove legend entirely (looks cleaner)
-    
-    fig.update_layout(showlegend=False)
+        # Trendline stats
+        slope, intercept, r2 = get_trendline_stats(clean, x, y)
 
-    slope, intercept, r2 = get_trendline_stats(clean, x, y)
+        fig.add_annotation(
+            xref="paper", yref="paper",
+            x=0.02, y=0.98,
+            text=f"y = {slope:.2f}x + {intercept:.2f}<br>R² = {r2:.3f}",
+            showarrow=False,
+            font=dict(color="white", size=13),
+            bgcolor="rgba(0,0,0,0.5)",
+            bordercolor="#7FDBFF",
+            borderwidth=1
+        )
 
-    fig.add_annotation(
-        xref="paper", yref="paper",
-        x=0.02, y=0.98,
-        text=f"y = {slope:.2f}x + {intercept:.2f}<br>R² = {r2:.3f}",
-        showarrow=False,
-        font=dict(color="white", size=13),
-        bgcolor="rgba(0,0,0,0.5)",
-        bordercolor="#7FDBFF",
-        borderwidth=1
-    )
-
-    fig.update_layout(dragmode=False)
+    # Disable zoom/pan for mobile
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+    fig.update_layout(showlegend=False, dragmode=False)
 
     return fig
 
 # --------------------------------------------------------------
-# 🌈 Curated Temperature vs Orbital Distance Plot
+# Temperature vs Orbital Distance Plot
 # --------------------------------------------------------------
 def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
 
@@ -102,9 +95,7 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
     x = "pl_orbper"   # orbital period (proxy for distance)
     y = "pl_eqt"      # equilibrium temperature
 
-    # =====================================================
-    # ⭐ BINNED VERSION — reduces extreme skew
-    # =====================================================
+    # BINNED VERSION — reduces extreme skew
     if use_binning:
         # LOG-BIN the orbital periods
         clean["log_x"] = np.log10(clean[x])
@@ -138,7 +129,6 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
         )
 
         # Add trendline to binned data
-        # Add trendline to binned data
         if trendline:
             slope, intercept = np.polyfit(binned_df["log_x"], binned_df["temp_med"], 1)
             lx = np.array([binned_df["log_x"].min(), binned_df["log_x"].max()])
@@ -151,7 +141,7 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
                 line=dict(color="red", width=3)
             )
 
-            # ⭐ Add annotation with trendline equation
+            # Add annotation with trendline equation
             r2 = np.corrcoef(binned_df["log_x"], binned_df["temp_med"])[0,1] ** 2
 
             fig.add_annotation(
@@ -170,29 +160,15 @@ def temperature_vs_distance_plot(df, use_binning=True, trendline=True):
             )
         
         fig.update_layout(showlegend=False)
-
         fig.update_layout(dragmode=False)
+        fig.update_xaxes(fixedrange=True)
+        fig.update_yaxes(fixedrange=True)
 
         return fig
 
-    # =====================================================
-    # ⭐ RAW SCATTER (log x-axis)
-    # =====================================================
-    # fig = px.scatter(
-    #     clean,
-    #     x=x,
-    #     y=y,
-    #     hover_name="pl_name",
-    #     title="Orbital Distance vs Temperature",
-    #     labels={x: "Orbital Period (days)", y: "Equilibrium Temperature (K)"},
-    #     template="plotly_dark",
-    #     opacity=0.7,
-    # )
-
-    # fig.update_xaxes(type="log")
-
-    # return fig
-
+# --------------------------------------------------------------
+# Animated Discovery Year Bar Chart
+# --------------------------------------------------------------
 def discovery_year_bar_chart(df):
     clean = df[df["disc_year"] > 1980].dropna(subset=["disc_year"]).copy()
 
@@ -206,7 +182,7 @@ def discovery_year_bar_chart(df):
 
     counts["cumulative"] = counts["count"].cumsum()
 
-    # ⭐ Build cumulative frames
+    # Build cumulative frames
     frames = []
     for year in counts["disc_year"]:
         subset = counts[counts["disc_year"] <= year].copy()
@@ -219,7 +195,7 @@ def discovery_year_bar_chart(df):
         animated_df,
         x="disc_year",
         y="cumulative",
-        animation_frame="frame",   # use our custom frame column
+        animation_frame="frame",   # use custom frame column
         range_x=[1988, 2025],
         range_y=[0, animated_df["cumulative"].max()],
         labels={
@@ -233,7 +209,7 @@ def discovery_year_bar_chart(df):
 
     fig.update_traces(marker_color="#7FDBFF")
 
-    # Remove the animation frame value ("Year=xxxx") from EVERY frame
+    # Remove the animation frame value ("Year=xxxx") from every frame
     for frame in fig.frames:
         for trace in frame.data:
             trace.hovertemplate = (
@@ -241,7 +217,7 @@ def discovery_year_bar_chart(df):
                 "Total Planets Discovered=%{y}<extra></extra>"
             )
 
-    # Also fix the initial (visible) traces
+    # fix initial (visible) traces
     fig.update_traces(
         hovertemplate=(
             "Discovery Year=%{x}<br>"
@@ -249,7 +225,7 @@ def discovery_year_bar_chart(df):
         )
     )
 
-    # slow animation
+    # slow down animation
     fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 400
     fig.layout.updatemenus[0].buttons[0].args[1]["transition"]["duration"] = 200
 
@@ -265,27 +241,39 @@ def discovery_year_bar_chart(df):
 
 def distance_histogram(df):
     """
-    Histogram of exoplanet distances from Earth.
-    Shows how many planets are nearby vs far away.
+    Curated histogram of exoplanet distances from Earth.
+    Uses log10(distance) scaling, mobile-friendly, fully styled.
     """
 
+    # Clean + transform data
     clean = df[["sy_dist"]].dropna()
-    clean = clean[clean["sy_dist"] > 0]  # remove invalid zeros
+    clean = clean[clean["sy_dist"] > 0]
+    clean["log_dist"] = np.log10(clean["sy_dist"])
 
+    # Create histogram
     fig = px.histogram(
         clean,
-        x="sy_dist",
-        nbins=80,
-        title="Distance From Earth (pc)",
-        labels={"sy_dist": "Distance From Earth (pc)"},
+        x="log_dist",
+        nbins=60,
+        title="Distance From Earth (log-scaled)",
+        labels={"log_dist": "log₁₀(Distance in parsecs)"},
         template="plotly_dark"
     )
 
     fig.update_traces(marker_color="#66C2FF", opacity=0.75)
+
     fig.update_layout(
-        xaxis_title="Distance (parsecs)",
+        xaxis_title="log₁₀(Distance [pc])",
         yaxis_title="Number of Planets",
+        bargap=0.05,
+        dragmode=False,
+        showlegend=False
     )
+
+    # Disable all zoom/pan (mobile-friendly)
+    fig.update_xaxes(fixedrange=True)
+    fig.update_yaxes(fixedrange=True)
+
     return fig
 
 def method_radius_boxplots(df):
@@ -301,7 +289,7 @@ def method_radius_boxplots(df):
 
     figs = {}
 
-    # 1️⃣ ZOOMED PLOT (0–30 R⊕)
+    # ZOOMED PLOT (0–30 R⊕)
     zoom = clean[clean["pl_rade"] <= 30]
     fig_zoom = px.box(
         zoom,
@@ -317,7 +305,7 @@ def method_radius_boxplots(df):
     fig_zoom.update_layout(dragmode=False)
     figs["zoom"] = fig_zoom
 
-    # 2️⃣ FULL RANGE PLOT
+    # FULL RANGE PLOT
     fig_full = px.box(
         clean,
         x="method_group",

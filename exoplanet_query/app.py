@@ -3,9 +3,9 @@ import plotly.express as px
 import numpy as np
 from database.data_loader import get_exoplanet_data
 from controller.controller import query_exoplanets
-from plot import method_radius_boxplots, radius_vs_mass_plot, temperature_vs_distance_plot, discovery_year_bar_chart, distance_histogram, method_radius_boxplots
+from plot import method_radius_boxplots, radius_vs_mass_plot, temperature_vs_distance_plot, discovery_year_bar_chart, distance_histogram
 
-# Friendly labels for query filters
+# User friendly labels for query filters
 QUERY_LABELS = {
     "pl_name": "Planet Name",
     "disc_year": "Discovery Year",
@@ -20,9 +20,7 @@ QUERY_LABELS = {
     "pl_eqt": "Equilibrium Temperature (K)"
 }
 
-# -------------------------------
-# 🚀 Page Setup
-# -------------------------------
+# Page Setup
 st.set_page_config(
     page_title="NASA Exoplanet Query App",
     layout="wide"
@@ -30,9 +28,7 @@ st.set_page_config(
 
 st.title("🔭 NASA Exoplanet Query App")
 
-# -------------------------------
-# 🚀 1. Load Data
-# -------------------------------
+# Load Data
 @st.cache_data(show_spinner=True)
 def load_data():
     return get_exoplanet_data(save_to_db=False)
@@ -40,17 +36,16 @@ def load_data():
 data = load_data()
 
 
-# -------------------------------
-# 🚀 2. TABS (Query + Plot)
-# -------------------------------
+# TABS (Query + Plot)
 tab_plot, tab_query = st.tabs(["📊 Plot", "🔍 Query"])
 
-
 # ================================================================
-# 📊 TAB 1 — PLANET RADIUS vs MASS (CURATED VISUAL)
+# TAB 1 — PLOT PAGE
 # ================================================================
 with tab_plot:
-
+    # ================================================================
+    # PLANET RADIUS vs MASS
+    # ================================================================
     st.header("📊 Planet Radius vs Planet Mass")
 
     st.markdown("""
@@ -64,23 +59,11 @@ with tab_plot:
     This is one of the most important charts in exoplanet science!
     """)
 
-    # -------------------------------
-    # Clean DF for plotting
-    # -------------------------------
-    plot_df = data[["pl_name", "pl_rade", "pl_masse"]].dropna()
-
-    # Remove impossible zero values
-    plot_df = plot_df[(plot_df["pl_rade"] > 0) & (plot_df["pl_masse"] > 0)]
-
-    st.write(f"**Displaying {len(plot_df):,} planets**")
-
     fig = radius_vs_mass_plot(data, trendline=True)
-    fig.update_xaxes(fixedrange=True)
-    fig.update_yaxes(fixedrange=True)
     st.plotly_chart(fig, use_container_width=True)
 
     # ================================================================
-    # 🌡️ TEMPERATURE vs ORBITAL DISTANCE SECTION
+    # TEMPERATURE vs ORBITAL DISTANCE
     # ================================================================
     st.header("🌡️ Orbital Distance vs Temperature")
 
@@ -96,14 +79,11 @@ with tab_plot:
     """)
 
     fig2 = temperature_vs_distance_plot(data)
-    fig2.update_xaxes(fixedrange=True)
-    fig2.update_yaxes(fixedrange=True)
     st.plotly_chart(fig2, use_container_width=True)
 
     # ================================================================
     #  DISCOVERY YEAR BAR CHART
     # ================================================================
-
     st.header("📅 Discovery Year")
 
     st.markdown("""
@@ -119,7 +99,7 @@ with tab_plot:
     st.plotly_chart(fig3, use_container_width=True)
 
     # ================================================================
-    #  DISTANCE FROM EARTH HISTOGRAM (LOG SCALE VERSION)
+    #  DISTANCE FROM EARTH HISTOGRAM (LOG SCALE)
     # ================================================================
     st.header("📏 Distance from Earth")
 
@@ -135,55 +115,21 @@ with tab_plot:
     than by where planets actually are.
     """)
 
-    # ------------------------------
-    # Clean + transform data
-    # ------------------------------
-    clean = data[["sy_dist"]].dropna()
-    clean = clean[clean["sy_dist"] > 0]  # remove invalid 0 values
+    fig = distance_histogram(data)
 
-    # log-transform distance
-    clean["log_dist"] = np.log10(clean["sy_dist"])
-
-    # ------------------------------
-    # Create histogram
-    # ------------------------------
-    fig4 = px.histogram(
-        clean,
-        x="log_dist",
-        nbins=60,
-        title="Distance From Earth (log-scaled)",
-        labels={
-            "log_dist": "log₁₀(Distance in parsecs)",
-        },
-        template="plotly_dark"
-    )
-
-    fig4.update_traces(marker_color="#66C2FF", opacity=0.75)
-    fig4.update_layout(
-        xaxis_title="log₁₀(Distance [pc])",
-        yaxis_title="Number of Planets",
-    )
-
-    # Disable zooming/panning
-    fig4.update_xaxes(fixedrange=True)
-    fig4.update_yaxes(fixedrange=True)
-
-    # Display (mobile-friendly)
     st.plotly_chart(
-        fig4,
+        fig,
         use_container_width=True,
-        config={
-            "scrollZoom": False,
-            "doubleClick": False,
-            "displayModeBar": False,
-            "staticPlot": False,
-        }
+        config=dict(
+            scrollZoom=False,
+            doubleClick=False,
+            displayModeBar=False
+        )
     )
 
     # -------------------------------------------------
     # DISCOVERY METHOD COMPARISON (BOX PLOTS)
     # -------------------------------------------------
-
     st.header("🔍 Discovery Method Comparison")
 
     st.markdown("""
@@ -213,13 +159,13 @@ with tab_plot:
     st.plotly_chart(figs["full"], use_container_width=True)
 
 # ================================================================
-# 🔍 TAB 2 — QUERY PAGE
+# TAB 2 — QUERY PAGE
 # ================================================================
 with tab_query:
 
     st.header("🔍 Filter Options")
 
-    # --- Filters inside the tab ---
+    # Filters inside the tab
     col1, col2 = st.columns(2)
 
     with col1:
@@ -240,7 +186,7 @@ with tab_query:
         )
         host_name = st.text_input(QUERY_LABELS["hostname"])
 
-    # --- Run Query Button ---
+    # Run Query Button
     if st.button("Run Query"):
         filtered = query_exoplanets(
             data,
@@ -255,4 +201,3 @@ with tab_query:
 
         st.subheader("Query Results")
         st.dataframe(renamed, use_container_width=True)
-        
