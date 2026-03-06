@@ -1,7 +1,7 @@
 <h1 align="center">🔭 NASA Exoplanet Query App</h1>
 <p align="center"> A Streamlit-powered web application for exploring NASA’s Exoplanet Archive through interactive queries and engaging visualizations. </p>
 
-<p align="center"> 🚀 Live Demo: <a href="https://exoplanetquery.streamlit.app">exoplanetquery.streamlit.app</a> </p>
+<p align="center"> 🚀 Live Demo: <a href="https://nasaexoplanetquery.streamlit.app/">nasaexoplanetquery.streamlit.app</a> </p>
 
 # 🌟 Features
 
